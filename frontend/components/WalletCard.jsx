@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getUserBalance, getSavingsBalance, getUnlockTime, getFaucetTokens } from '../utils/contract';
+import { getUserBalance, getSavingsBalance, getUnlockTime, claimFaucet, canClaimFaucet } from '../utils/contract';
 import toast from 'react-hot-toast';
 
 export default function WalletCard({ userAddress, onBalanceUpdate }) {
@@ -41,9 +41,18 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
   const handleClaimFaucet = async () => {
     try {
       setClaiming(true);
+
+      // Check if user can claim
+      const canClaim = await canClaimFaucet(userAddress);
+      if (!canClaim) {
+        toast.error('Please wait 24 hours between claims');
+        setClaiming(false);
+        return;
+      }
+
       toast.loading('Claiming 100 sUSDT from faucet...');
 
-      const tx = await getFaucetTokens(100);
+      const tx = await claimFaucet();
 
       toast.dismiss();
       toast.success(`Claimed 100 sUSDT! 🎉 TX: ${tx.hash.slice(0, 10)}...`);
@@ -52,7 +61,12 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
       setTimeout(() => loadBalances(), 2000);
     } catch (error) {
       toast.dismiss();
-      toast.error('Failed to claim tokens: ' + error.message);
+      const errorMsg = error.message || error.reason || 'Unknown error';
+      if (errorMsg.includes('24 hours')) {
+        toast.error('Please wait 24 hours between claims');
+      } else {
+        toast.error('Failed to claim tokens: ' + errorMsg);
+      }
       console.error('Faucet error:', error);
     } finally {
       setClaiming(false);

@@ -51,7 +51,7 @@ export default function Dashboard() {
       const account = await connectWallet();
 
       toast.dismiss();
-      toast.success('Wallet connected! 🎉');
+      toast.success('Wallet connected! ');
       setWalletConnected(true);
     } catch (error) {
       toast.dismiss();
@@ -80,7 +80,7 @@ export default function Dashboard() {
       const tx = await depositTokens(amount);
 
       toast.dismiss();
-      toast.success(`Deposited ${amount} sUSDT to vault! 🎉`);
+      toast.success(`Deposited ${amount} sUSDT to vault!`);
 
       // Refresh balances
       setRefreshKey(prev => prev + 1);
@@ -125,7 +125,7 @@ export default function Dashboard() {
             {!walletConnected ? (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center">
-                  <span className="text-2xl mr-3">⚠️</span>
+                  <span className="text-2xl mr-3"></span>
                   <div>
                     <p className="font-semibold text-yellow-900">Connect MetaMask</p>
                     <p className="text-sm text-yellow-700">
@@ -143,7 +143,7 @@ export default function Dashboard() {
             ) : (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center">
-                  <span className="text-2xl mr-3">✅</span>
+                  <span className="text-2xl mr-3"></span>
                   <div>
                     <p className="font-semibold text-green-900">Wallet Connected</p>
                     <p className="text-sm text-green-700">
@@ -155,7 +155,7 @@ export default function Dashboard() {
                   onClick={handleDepositToVault}
                   className="btn-secondary text-sm whitespace-nowrap"
                 >
-                  💰 Deposit to Vault
+                  Deposit to Vault
                 </button>
               </div>
             )}
@@ -189,26 +189,26 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
             <button className="card text-center hover:shadow-xl transition-shadow">
-              <div className="text-3xl mb-2">📊</div>
+              <div className="text-3xl mb-2"></div>
               <p className="font-semibold text-sm">Transactions</p>
             </button>
             <button className="card text-center hover:shadow-xl transition-shadow">
-              <div className="text-3xl mb-2">👥</div>
+              <div className="text-3xl mb-2"></div>
               <p className="font-semibold text-sm">Contacts</p>
             </button>
             <button className="card text-center hover:shadow-xl transition-shadow">
-              <div className="text-3xl mb-2">⚙️</div>
+              <div className="text-3xl mb-2"></div>
               <p className="font-semibold text-sm">Settings</p>
             </button>
             <button className="card text-center hover:shadow-xl transition-shadow">
-              <div className="text-3xl mb-2">📱</div>
+              <div className="text-3xl mb-2"></div>
               <p className="font-semibold text-sm">QR Code</p>
             </button>
           </div>
 
           {/* Info Footer */}
           <div className="mt-8 bg-primary bg-opacity-10 border border-primary rounded-lg p-6">
-            <h3 className="font-bold text-primary mb-3">🚀 Demo Mode</h3>
+            <h3 className="font-bold text-primary mb-3"> Demo Mode</h3>
             <p className="text-sm text-gray-700 mb-2">
               This is a testnet demo running on Base Sepolia. All transactions are for testing purposes only.
             </p>

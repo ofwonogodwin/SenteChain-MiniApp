@@ -207,17 +207,27 @@ export const withdrawFromVault = async (amount) => {
   }
 };
 
-// Get tokens from faucet
-export const getFaucetTokens = async (amount) => {
+// Claim tokens from faucet (100 sUSDT once per day)
+export const claimFaucet = async () => {
   try {
     const token = await getTokenContract(true);
-    const amountInUnits = ethers.parseUnits(amount.toString(), 6);
-    const tx = await token.faucet(amountInUnits);
+    const tx = await token.claimFaucet();
     await tx.wait();
     return tx;
   } catch (error) {
-    console.error('Error getting faucet tokens:', error);
+    console.error('Error claiming from faucet:', error);
     throw error;
+  }
+};
+
+// Check if user can claim from faucet
+export const canClaimFaucet = async (address) => {
+  try {
+    const token = await getTokenContract();
+    return await token.canClaimFaucet(address);
+  } catch (error) {
+    console.error('Error checking faucet eligibility:', error);
+    return false;
   }
 };
 
