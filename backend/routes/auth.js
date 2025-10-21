@@ -40,17 +40,17 @@ router.post(
       }
 
       const { identifier } = req.body;
-      
+
       // Determine if identifier is email or phone
       const isEmail = identifier.includes('@');
       const searchQuery = isEmail ? { email: identifier } : { phone: identifier };
-      
+
       // Generate wallet address
       const walletAddress = generateWalletAddress(identifier);
-      
+
       // Generate username from identifier
-      const username = isEmail 
-        ? identifier.split('@')[0] 
+      const username = isEmail
+        ? identifier.split('@')[0]
         : `user_${identifier.slice(-4)}`;
 
       let user;
@@ -59,7 +59,7 @@ router.post(
       try {
         // Try to find existing user in MongoDB
         user = await User.findOne(searchQuery);
-        
+
         if (!user) {
           // Create new user
           const userData = {
@@ -67,7 +67,7 @@ router.post(
             walletAddress,
             ...(isEmail ? { email: identifier } : { phone: identifier }),
           };
-          
+
           user = new User(userData);
           await user.save();
           isNewUser = true;
@@ -79,7 +79,7 @@ router.post(
       } catch (dbError) {
         // Fallback to in-memory storage
         console.log('Using in-memory storage');
-        
+
         const key = identifier;
         if (!inMemoryUsers.has(key)) {
           user = {
@@ -125,7 +125,7 @@ router.post(
 router.get('/profile/:walletAddress', async (req, res) => {
   try {
     const { walletAddress } = req.params;
-    
+
     let user;
     try {
       user = await User.findOne({ walletAddress });
@@ -164,13 +164,13 @@ router.get('/profile/:walletAddress', async (req, res) => {
 router.get('/search', async (req, res) => {
   try {
     const { query } = req.query;
-    
+
     if (!query) {
       return res.status(400).json({ error: 'Search query is required' });
     }
 
     let users = [];
-    
+
     try {
       // Search in MongoDB
       users = await User.find({

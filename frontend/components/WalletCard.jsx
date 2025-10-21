@@ -23,11 +23,11 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
         getSavingsBalance(userAddress),
         getUnlockTime(userAddress),
       ]);
-      
+
       setBalance(bal);
       setSavingsBalance(savBal);
       setUnlockTime(unlock);
-      
+
       if (onBalanceUpdate) {
         onBalanceUpdate(bal, savBal);
       }
@@ -42,12 +42,12 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
     try {
       setClaiming(true);
       toast.loading('Claiming 100 sUSDT from faucet...');
-      
+
       const tx = await getFaucetTokens(100);
-      
+
       toast.dismiss();
       toast.success(`Claimed 100 sUSDT! 🎉 TX: ${tx.hash.slice(0, 10)}...`);
-      
+
       // Reload balances
       setTimeout(() => loadBalances(), 2000);
     } catch (error) {

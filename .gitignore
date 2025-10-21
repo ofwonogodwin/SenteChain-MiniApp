@@ -20,6 +20,7 @@ typechain-types/
 .env
 .env.local
 .env.production
+.env.example
 
 # Logs
 *.log

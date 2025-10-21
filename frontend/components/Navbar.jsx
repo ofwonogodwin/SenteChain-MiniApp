@@ -28,7 +28,7 @@ export default function Navbar({ user, onLogout }) {
                   {formatAddress(user.walletAddress)}
                 </p>
               </div>
-              
+
               <div className="relative">
                 <button
                   onClick={() => setShowMenu(!showMenu)}

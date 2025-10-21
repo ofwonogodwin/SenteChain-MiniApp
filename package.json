@@ -12,7 +12,12 @@
     "deploy": "npx hardhat run smart_contracts/deploy.js --network baseSepolia",
     "test": "npx hardhat test"
   },
-  "keywords": ["web3", "base", "stablecoin", "defi"],
+  "keywords": [
+    "web3",
+    "base",
+    "stablecoin",
+    "defi"
+  ],
   "author": "SenteChain Team",
   "license": "MIT",
   "devDependencies": {

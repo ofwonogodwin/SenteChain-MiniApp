@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Ensure at least email or phone is provided
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   if (!this.email && !this.phone) {
     next(new Error('Either email or phone is required'));
   } else {

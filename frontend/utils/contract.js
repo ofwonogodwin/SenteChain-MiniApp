@@ -44,16 +44,16 @@ export const getTokenContract = async (signerRequired = false) => {
   if (!contractsData?.contracts?.SenteToken) {
     throw new Error('Contract addresses not found. Please deploy contracts first.');
   }
-  
+
   if (!provider) initProvider();
-  
+
   const contractSigner = signerRequired ? await getSigner() : provider;
   tokenContract = new ethers.Contract(
     contractsData.contracts.SenteToken,
     SenteTokenABI,
     contractSigner
   );
-  
+
   return tokenContract;
 };
 
@@ -62,16 +62,16 @@ export const getVaultContract = async (signerRequired = false) => {
   if (!contractsData?.contracts?.SenteVault) {
     throw new Error('Contract addresses not found. Please deploy contracts first.');
   }
-  
+
   if (!provider) initProvider();
-  
+
   const contractSigner = signerRequired ? await getSigner() : provider;
   vaultContract = new ethers.Contract(
     contractsData.contracts.SenteVault,
     SenteVaultABI,
     contractSigner
   );
-  
+
   return vaultContract;
 };
 

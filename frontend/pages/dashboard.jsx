@@ -49,7 +49,7 @@ export default function Dashboard() {
 
       toast.loading('Connecting to MetaMask...');
       const account = await connectWallet();
-      
+
       toast.dismiss();
       toast.success('Wallet connected! 🎉');
       setWalletConnected(true);
@@ -74,14 +74,14 @@ export default function Dashboard() {
 
       toast.loading('Approving tokens...');
       await approveTokens(amount);
-      
+
       toast.dismiss();
       toast.loading('Depositing to vault...');
       const tx = await depositTokens(amount);
-      
+
       toast.dismiss();
       toast.success(`Deposited ${amount} sUSDT to vault! 🎉`);
-      
+
       // Refresh balances
       setRefreshKey(prev => prev + 1);
     } catch (error) {

@@ -113,21 +113,19 @@ export default function SavingsVault({ userAddress, onSuccess }) {
       <div className="flex space-x-2 mb-4">
         <button
           onClick={() => setActiveTab('deposit')}
-          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-            activeTab === 'deposit'
+          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${activeTab === 'deposit'
               ? 'bg-primary text-white'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
+            }`}
         >
           💰 Lock Savings
         </button>
         <button
           onClick={() => setActiveTab('withdraw')}
-          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-            activeTab === 'withdraw'
+          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${activeTab === 'withdraw'
               ? 'bg-primary text-white'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
+            }`}
         >
           🔓 Withdraw
         </button>
