@@ -82,8 +82,10 @@ export default function Dashboard() {
       toast.dismiss();
       toast.success(`Deposited ${amount} sUSDT to vault!`);
 
-      // Refresh balances
-      setRefreshKey(prev => prev + 1);
+      // Wait a moment for blockchain state to update, then refresh balances
+      setTimeout(() => {
+        setRefreshKey(prev => prev + 1);
+      }, 1500);
     } catch (error) {
       toast.dismiss();
       console.error('Deposit error:', error);

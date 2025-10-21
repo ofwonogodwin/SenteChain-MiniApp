@@ -21,66 +21,221 @@ let signer = null;
 let tokenContract = null;
 let vaultContract = null;
 
+// Check if Hardhat node is running
+export const checkHardhatNode = async () => {
+  try {
+    const localProvider = new ethers.JsonRpcProvider('http://127.0.0.1:8545');
+    const network = await localProvider.getNetwork();
+    return network.chainId === 1337n; // Hardhat local network
+  } catch (error) {
+    console.warn('Hardhat local node not detected:', error.message);
+    return false;
+  }
+};
+
 // Initialize provider
 export const initProvider = () => {
   if (typeof window !== 'undefined' && window.ethereum) {
     provider = new ethers.BrowserProvider(window.ethereum);
     return provider;
   }
-  // Fallback to public RPC
-  provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_CONFIG.rpcUrls[0]);
+
+  // Fallback: Try local Hardhat first, then public RPC
+  try {
+    // Check if contracts are deployed locally
+    if (contractsData?.network === 'localhost' || contractsData?.chainId === '1337') {
+      provider = new ethers.JsonRpcProvider('http://127.0.0.1:8545');
+      console.log('Using Hardhat local provider');
+    } else {
+      provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_CONFIG.rpcUrls[0]);
+      console.log('Using Base Sepolia provider');
+    }
+  } catch (error) {
+    console.error('Error initializing provider:', error);
+    provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_CONFIG.rpcUrls[0]);
+  }
+
   return provider;
+};
+
+// Request wallet connection
+export const connectWallet = async () => {
+  try {
+    if (typeof window === 'undefined' || !window.ethereum) {
+      throw new Error('MetaMask not installed. Please install MetaMask extension.');
+    }
+
+    // Request account access
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+    // Get the connected accounts
+    const browserProvider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await browserProvider.getSigner();
+    const address = await signer.getAddress();
+
+    console.log('Wallet connected:', address);
+    return address;
+  } catch (error) {
+    console.error('Error connecting wallet:', error);
+    throw error;
+  }
 };
 
 // Get signer
 export const getSigner = async () => {
-  if (!provider) initProvider();
-  signer = await provider.getSigner();
-  return signer;
+  try {
+    // Always use window.ethereum for signing transactions
+    if (typeof window === 'undefined' || !window.ethereum) {
+      throw new Error('MetaMask not installed. Please install MetaMask extension.');
+    }
+
+    // Request account access if not already connected
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+    // Create a fresh browser provider from MetaMask
+    const browserProvider = new ethers.BrowserProvider(window.ethereum);
+    signer = await browserProvider.getSigner();
+
+    console.log('Signer obtained:', await signer.getAddress());
+    return signer;
+  } catch (error) {
+    console.error('Error getting signer:', error);
+
+    // Provide more specific error message
+    if (error.code === 4001) {
+      throw new Error('Please connect your MetaMask wallet to continue.');
+    }
+    throw new Error('Failed to get signer. Please ensure MetaMask is unlocked and try again.');
+  }
 };
 
 // Get token contract instance
 export const getTokenContract = async (signerRequired = false) => {
-  if (!contractsData?.contracts?.SenteToken) {
-    throw new Error('Contract addresses not found. Please deploy contracts first.');
+  try {
+    if (!contractsData?.contracts?.SenteToken) {
+      throw new Error('Contract addresses not found. Please deploy contracts first.');
+    }
+
+    // If signer is required, get it from MetaMask
+    if (signerRequired) {
+      if (typeof window === 'undefined' || !window.ethereum) {
+        throw new Error('MetaMask not installed. Please install MetaMask extension to send transactions.');
+      }
+
+      // Request account access if not already connected
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+      // Always create a fresh signer for transactions
+      const browserProvider = new ethers.BrowserProvider(window.ethereum);
+      const contractSigner = await browserProvider.getSigner();
+
+      console.log('Creating token contract with signer:', await contractSigner.getAddress());
+
+      tokenContract = new ethers.Contract(
+        contractsData.contracts.SenteToken,
+        SenteTokenABI,
+        contractSigner
+      );
+    } else {
+      // Use provider for read-only operations
+      if (!provider) {
+        initProvider();
+      }
+
+      tokenContract = new ethers.Contract(
+        contractsData.contracts.SenteToken,
+        SenteTokenABI,
+        provider
+      );
+    }
+
+    return tokenContract;
+  } catch (error) {
+    console.error('Error getting token contract:', error);
+
+    // Provide more specific error message
+    if (error.code === 4001) {
+      throw new Error('Please connect your MetaMask wallet to continue.');
+    }
+    throw error;
   }
-
-  if (!provider) initProvider();
-
-  const contractSigner = signerRequired ? await getSigner() : provider;
-  tokenContract = new ethers.Contract(
-    contractsData.contracts.SenteToken,
-    SenteTokenABI,
-    contractSigner
-  );
-
-  return tokenContract;
-};
-
-// Get vault contract instance
+};// Get vault contract instance
 export const getVaultContract = async (signerRequired = false) => {
-  if (!contractsData?.contracts?.SenteVault) {
-    throw new Error('Contract addresses not found. Please deploy contracts first.');
+  try {
+    if (!contractsData?.contracts?.SenteVault) {
+      console.warn('Contract addresses not found in contracts.json');
+      throw new Error('Contract addresses not found. Please deploy contracts first.');
+    }
+
+    // If signer is required, get it from MetaMask
+    if (signerRequired) {
+      if (typeof window === 'undefined' || !window.ethereum) {
+        throw new Error('MetaMask not installed. Please install MetaMask extension to send transactions.');
+      }
+
+      // Request account access if not already connected
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+      // Always create a fresh signer for transactions
+      const browserProvider = new ethers.BrowserProvider(window.ethereum);
+      const contractSigner = await browserProvider.getSigner();
+
+      console.log('Creating vault contract with signer:', await contractSigner.getAddress());
+
+      vaultContract = new ethers.Contract(
+        contractsData.contracts.SenteVault,
+        SenteVaultABI,
+        contractSigner
+      );
+    } else {
+      // Use provider for read-only operations
+      if (!provider) {
+        initProvider();
+      }
+
+      vaultContract = new ethers.Contract(
+        contractsData.contracts.SenteVault,
+        SenteVaultABI,
+        provider
+      );
+    }
+
+    return vaultContract;
+  } catch (error) {
+    console.error('Error getting vault contract:', error);
+
+    // Provide more specific error message
+    if (error.code === 4001) {
+      throw new Error('Please connect your MetaMask wallet to continue.');
+    }
+    throw error;
   }
-
-  if (!provider) initProvider();
-
-  const contractSigner = signerRequired ? await getSigner() : provider;
-  vaultContract = new ethers.Contract(
-    contractsData.contracts.SenteVault,
-    SenteVaultABI,
-    contractSigner
-  );
-
-  return vaultContract;
 };
 
 // Get user balance from vault
 export const getUserBalance = async (address) => {
   try {
+    // Validate address
+    if (!address || !ethers.isAddress(address)) {
+      console.warn('Invalid address provided:', address);
+      return '0';
+    }
+
+    // Force fresh provider to avoid caching issues
+    provider = null;
     const vault = await getVaultContract();
-    const balance = await vault.getBalance(address);
-    return ethers.formatUnits(balance, 6); // 6 decimals for USDT
+
+    // Check if contract is deployed by calling a view function
+    try {
+      const balance = await vault.getBalance(address);
+      const formattedBalance = ethers.formatUnits(balance, 6); // 6 decimals for USDT
+      console.log(`Balance for ${address}: ${formattedBalance} sUSDT`);
+      return formattedBalance;
+    } catch (contractError) {
+      console.error('Contract call failed - is Hardhat node running?', contractError);
+      // Return 0 if contract isn't available instead of crashing
+      return '0';
+    }
   } catch (error) {
     console.error('Error fetching balance:', error);
     return '0';
@@ -90,9 +245,25 @@ export const getUserBalance = async (address) => {
 // Get user savings balance
 export const getSavingsBalance = async (address) => {
   try {
+    // Validate address
+    if (!address || !ethers.isAddress(address)) {
+      console.warn('Invalid address provided:', address);
+      return '0';
+    }
+
+    // Force fresh provider to avoid caching issues
+    provider = null;
     const vault = await getVaultContract();
-    const balance = await vault.getSavingsBalance(address);
-    return ethers.formatUnits(balance, 6);
+
+    try {
+      const balance = await vault.getSavingsBalance(address);
+      const formattedBalance = ethers.formatUnits(balance, 6);
+      console.log(`Savings balance for ${address}: ${formattedBalance} sUSDT`);
+      return formattedBalance;
+    } catch (contractError) {
+      console.error('Contract call failed - is Hardhat node running?', contractError);
+      return '0';
+    }
   } catch (error) {
     console.error('Error fetching savings balance:', error);
     return '0';
