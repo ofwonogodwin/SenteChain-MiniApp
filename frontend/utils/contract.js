@@ -221,19 +221,43 @@ export const getUserBalance = async (address) => {
       return '0';
     }
 
-    // Force fresh provider to avoid caching issues
-    provider = null;
-    const vault = await getVaultContract();
+    // Get fresh provider
+    if (!provider) {
+      initProvider();
+    }
 
-    // Check if contract is deployed by calling a view function
+    // Verify contract address exists
+    if (!contractsData?.contracts?.SenteVault) {
+      console.error('SenteVault address not found in contracts.json');
+      return '0';
+    }
+
+    const vaultAddress = contractsData.contracts.SenteVault;
+
+    // Check if contract has code deployed
+    try {
+      const code = await provider.getCode(vaultAddress);
+      if (code === '0x' || code === '0x0') {
+        console.error('No contract found at vault address:', vaultAddress);
+        console.error('Is Hardhat node running? Run: npx hardhat node');
+        return '0';
+      }
+    } catch (codeError) {
+      console.error('Failed to check contract code:', codeError.message);
+      return '0';
+    }
+
+    // Create contract instance with fresh provider
+    const vault = new ethers.Contract(vaultAddress, SenteVaultABI, provider);
+
+    // Call getBalance
     try {
       const balance = await vault.getBalance(address);
       const formattedBalance = ethers.formatUnits(balance, 6); // 6 decimals for USDT
       console.log(`Balance for ${address}: ${formattedBalance} sUSDT`);
       return formattedBalance;
     } catch (contractError) {
-      console.error('Contract call failed - is Hardhat node running?', contractError);
-      // Return 0 if contract isn't available instead of crashing
+      console.error('Contract call failed:', contractError.message);
       return '0';
     }
   } catch (error) {

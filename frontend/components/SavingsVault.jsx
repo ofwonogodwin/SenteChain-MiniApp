@@ -31,7 +31,7 @@ export default function SavingsVault({ userAddress, onSuccess }) {
       toast.dismiss();
       toast.success(
         <div>
-          <p>✅ Tokens locked successfully!</p>
+          <p>Tokens locked successfully!</p>
           <a
             href={getExplorerLink(tx.hash)}
             target="_blank"
@@ -80,7 +80,7 @@ export default function SavingsVault({ userAddress, onSuccess }) {
       toast.dismiss();
       toast.success(
         <div>
-          <p>✅ Withdrawal successful!</p>
+          <p>Withdrawal successful!</p>
           <a
             href={getExplorerLink(tx.hash)}
             target="_blank"
@@ -107,27 +107,27 @@ export default function SavingsVault({ userAddress, onSuccess }) {
 
   return (
     <div className="card">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">🏦 Savings Vault</h2>
+      <h2 className="text-xl font-bold text-gray-800 mb-4">Savings Vault</h2>
 
       {/* Tabs */}
       <div className="flex space-x-2 mb-4">
         <button
           onClick={() => setActiveTab('deposit')}
           className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${activeTab === 'deposit'
-              ? 'bg-primary text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            ? 'bg-primary text-white'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
         >
-          💰 Lock Savings
+          Lock Savings
         </button>
         <button
           onClick={() => setActiveTab('withdraw')}
           className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${activeTab === 'withdraw'
-              ? 'bg-primary text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            ? 'bg-primary text-white'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
         >
-          🔓 Withdraw
+          Withdraw
         </button>
       </div>
 
@@ -169,12 +169,12 @@ export default function SavingsVault({ userAddress, onSuccess }) {
             disabled={loading || !amount}
             className="w-full btn-primary"
           >
-            {loading ? '⏳ Locking...' : '🔒 Lock in Savings'}
+            {loading ? 'Locking...' : 'Lock in Savings'}
           </button>
 
           <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-xs text-green-800">
-              💡 Your tokens will be locked for {lockDays} days. You can withdraw them after
+              Your tokens will be locked for {lockDays} days. You can withdraw them after
               the lock period ends.
             </p>
           </div>
@@ -203,12 +203,12 @@ export default function SavingsVault({ userAddress, onSuccess }) {
             disabled={loading || !amount}
             className="w-full btn-primary"
           >
-            {loading ? '⏳ Withdrawing...' : '💰 Withdraw from Savings'}
+            {loading ? 'Withdrawing...' : 'Withdraw from Savings'}
           </button>
 
           <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-xs text-yellow-800">
-              ⚠️ You can only withdraw if your lock period has ended. Check your wallet card
+              You can only withdraw if your lock period has ended. Check your wallet card
               for the unlock date.
             </p>
           </div>

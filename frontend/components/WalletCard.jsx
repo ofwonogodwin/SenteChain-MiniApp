@@ -83,13 +83,13 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
   return (
     <div className="card">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800">💼 My Wallet</h2>
+        <h2 className="text-xl font-bold text-gray-800">My Wallet</h2>
         <button
           onClick={loadBalances}
           disabled={loading}
           className="text-primary hover:text-primary-dark"
         >
-          🔄 {loading ? 'Loading...' : 'Refresh'}
+          {loading ? 'Loading...' : 'Refresh'}
         </button>
       </div>
 
@@ -106,7 +106,7 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
       <div className="bg-gradient-to-r from-accent to-yellow-500 rounded-lg p-4 mb-4 text-white">
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-xs opacity-90 mb-1">🔒 Savings Vault</p>
+            <p className="text-xs opacity-90 mb-1">Savings Vault</p>
             <p className="text-2xl font-bold">
               {loading ? '...' : parseFloat(savingsBalance).toFixed(2)} sUSDT
             </p>
@@ -116,7 +116,7 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
             <p className="text-sm font-semibold">{formatDate(unlockTime)}</p>
             {isLocked && (
               <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded mt-1 inline-block">
-                Locked 🔒
+                Locked
               </span>
             )}
           </div>
@@ -129,7 +129,7 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
         disabled={claiming || loading}
         className="w-full btn-secondary text-sm"
       >
-        {claiming ? '⏳ Claiming...' : '🚰 Claim 100 sUSDT (Testnet Faucet)'}
+        {claiming ? 'Claiming...' : 'Claim 100 sUSDT (Testnet Faucet)'}
       </button>
     </div>
   );

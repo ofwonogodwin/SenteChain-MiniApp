@@ -5,15 +5,28 @@ import Navbar from '../components/Navbar';
 import WalletCard from '../components/WalletCard';
 import SendForm from '../components/SendForm';
 import SavingsVault from '../components/SavingsVault';
+import TransactionHistory from '../components/TransactionHistory';
+import Settings from '../components/Settings';
+import QRCode from '../components/QRCode';
 import { connectWallet, isMetaMaskInstalled, onAccountsChanged, onChainChanged } from '../utils/connectWallet';
 import { approveTokens, depositTokens } from '../utils/contract';
+import contractsData from '../config/contracts.json';
 import toast from 'react-hot-toast';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [walletConnected, setWalletConnected] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activeModal, setActiveModal] = useState(null); // null, 'transactions', 'contacts', 'settings', 'qr'
   const router = useRouter();
+
+  // Get network display name
+  const getNetworkName = () => {
+    if (contractsData?.network === 'localhost' || contractsData?.chainId === '1337') {
+      return 'Hardhat Local Network';
+    }
+    return 'Base Sepolia';
+  };
 
   useEffect(() => {
     // Check if user is logged in
@@ -131,7 +144,7 @@ export default function Dashboard() {
                   <div>
                     <p className="font-semibold text-yellow-900">Connect MetaMask</p>
                     <p className="text-sm text-yellow-700">
-                      Connect your wallet to interact with Base blockchain
+                      Connect your wallet to interact with {getNetworkName()}
                     </p>
                   </div>
                 </div>
@@ -145,11 +158,10 @@ export default function Dashboard() {
             ) : (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center">
-                  <span className="text-2xl mr-3"></span>
                   <div>
                     <p className="font-semibold text-green-900">Wallet Connected</p>
                     <p className="text-sm text-green-700">
-                      You're connected to Base Sepolia
+                      Connected to {getNetworkName()}
                     </p>
                   </div>
                 </div>
@@ -189,36 +201,80 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="card text-center hover:shadow-xl transition-shadow">
-              <div className="text-3xl mb-2"></div>
-              <p className="font-semibold text-sm">Transactions</p>
+          <div className="mt-8 grid grid-cols-3 gap-6">
+            <button
+              onClick={() => setActiveModal('transactions')}
+              className="card text-center hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200"
+            >
+              <div className="text-4xl mb-3">📜</div>
+              <p className="font-bold text-base text-purple-900">Transactions</p>
+              <p className="text-xs text-purple-600 mt-1">View history</p>
             </button>
-            <button className="card text-center hover:shadow-xl transition-shadow">
-              <div className="text-3xl mb-2"></div>
-              <p className="font-semibold text-sm">Contacts</p>
+            <button
+              onClick={() => setActiveModal('settings')}
+              className="card text-center hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200"
+            >
+              <div className="text-4xl mb-3">⚙️</div>
+              <p className="font-bold text-base text-blue-900">Settings</p>
+              <p className="text-xs text-blue-600 mt-1">Manage account</p>
             </button>
-            <button className="card text-center hover:shadow-xl transition-shadow">
-              <div className="text-3xl mb-2"></div>
-              <p className="font-semibold text-sm">Settings</p>
-            </button>
-            <button className="card text-center hover:shadow-xl transition-shadow">
-              <div className="text-3xl mb-2"></div>
-              <p className="font-semibold text-sm">QR Code</p>
+            <button
+              onClick={() => setActiveModal('qr')}
+              className="card text-center hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200"
+            >
+              <div className="text-4xl mb-3">📱</div>
+              <p className="font-bold text-base text-green-900">QR Code</p>
+              <p className="text-xs text-green-600 mt-1">Receive payments</p>
             </button>
           </div>
 
           {/* Info Footer */}
           <div className="mt-8 bg-primary bg-opacity-10 border border-primary rounded-lg p-6">
-            <h3 className="font-bold text-primary mb-3"> Demo Mode</h3>
+            <h3 className="font-bold text-primary mb-3">Demo Mode</h3>
             <p className="text-sm text-gray-700 mb-2">
-              This is a testnet demo running on Base Sepolia. All transactions are for testing purposes only.
+              This is a testnet demo running on {getNetworkName()}. All transactions are for testing purposes only.
             </p>
             <p className="text-xs text-gray-600">
-              Contract addresses and deployment info will be displayed here after deployment.
+              Token: {contractsData.contracts?.SenteToken || 'Not deployed'}
             </p>
           </div>
         </div>
+
+        {/* Modal Overlays */}
+        {activeModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            onClick={() => setActiveModal(null)}
+          >
+            <div
+              className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-800">
+                  {activeModal === 'transactions' && 'Transaction History'}
+                  {activeModal === 'settings' && 'Settings'}
+                  {activeModal === 'qr' && 'QR Code'}
+                </h2>
+                <button
+                  onClick={() => setActiveModal(null)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="p-4">
+                {activeModal === 'transactions' && (
+                  <TransactionHistory userAddress={user.walletAddress} />
+                )}
+                {activeModal === 'settings' && <Settings user={user} />}
+                {activeModal === 'qr' && (
+                  <QRCode walletAddress={user.walletAddress} username={user.username} />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

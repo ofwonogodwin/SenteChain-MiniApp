@@ -30,7 +30,7 @@ export default function SendForm({ onSuccess }) {
       toast.dismiss();
       toast.success(
         <div>
-          <p>✅ Transfer successful!</p>
+          <p>Transfer successful!</p>
           <a
             href={getExplorerLink(tx.hash)}
             target="_blank"
@@ -61,7 +61,7 @@ export default function SendForm({ onSuccess }) {
 
   return (
     <div className="card">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">📤 Send sUSDT</h2>
+      <h2 className="text-xl font-bold text-gray-800 mb-4">Send sUSDT</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Recipient */}
@@ -101,14 +101,14 @@ export default function SendForm({ onSuccess }) {
           disabled={loading || !recipient || !amount}
           className="w-full btn-primary"
         >
-          {loading ? '⏳ Sending...' : '💸 Send Now'}
+          {loading ? 'Sending...' : 'Send Now'}
         </button>
       </form>
 
       {/* Info Box */}
       <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-xs text-blue-800">
-          💡 <strong>Tip:</strong> Transfers happen instantly within the SenteChain vault.
+          <strong>Tip:</strong> Transfers happen instantly within the SenteChain vault.
           No gas fees on transfers between SenteChain users!
         </p>
       </div>

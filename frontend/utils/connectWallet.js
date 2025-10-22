@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { BASE_SEPOLIA_CONFIG } from './contract';
+import contractsData from '../config/contracts.json';
 
 let provider = null;
 let currentAccount = null;
@@ -9,6 +10,19 @@ export const isMetaMaskInstalled = () => {
   return typeof window !== 'undefined' && typeof window.ethereum !== 'undefined';
 };
 
+// Hardhat Local Network Configuration
+export const HARDHAT_LOCAL_CONFIG = {
+  chainId: '0x539', // 1337 in hex
+  chainName: 'Hardhat Local',
+  nativeCurrency: {
+    name: 'Ethereum',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  rpcUrls: ['http://127.0.0.1:8545'],
+  blockExplorerUrls: [],
+};
+
 // Request account access
 export const connectWallet = async () => {
   try {
@@ -16,7 +30,7 @@ export const connectWallet = async () => {
       throw new Error('MetaMask is not installed. Please install it to use this app.');
     }
 
-    // Request account access
+    // Request account access first
     const accounts = await window.ethereum.request({
       method: 'eth_requestAccounts',
     });
@@ -26,10 +40,10 @@ export const connectWallet = async () => {
     }
 
     currentAccount = accounts[0];
+    console.log('Account connected:', currentAccount);
 
-    // Check if on correct network
-    await switchToBaseSepolia();
-
+    // Just return the account - don't force network switch
+    // User can manually switch network in MetaMask
     return currentAccount;
   } catch (error) {
     console.error('Error connecting wallet:', error);
@@ -76,11 +90,55 @@ export const switchToBaseSepolia = async () => {
           params: [BASE_SEPOLIA_CONFIG],
         });
       } catch (addError) {
+        // If already pending, ignore and continue
+        if (addError.code === -32002) {
+          console.log('Network add request already pending, please check MetaMask');
+          return;
+        }
         console.error('Error adding Base Sepolia network:', addError);
         throw addError;
       }
+    } else if (switchError.code === -32002) {
+      // Already pending
+      console.log('Network switch request already pending, please check MetaMask');
+      return;
     } else {
       console.error('Error switching to Base Sepolia:', switchError);
+      throw switchError;
+    }
+  }
+};
+
+// Switch to Hardhat Local network
+export const switchToHardhatLocal = async () => {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: HARDHAT_LOCAL_CONFIG.chainId }],
+    });
+  } catch (switchError) {
+    // This error code indicates that the chain has not been added to MetaMask
+    if (switchError.code === 4902) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [HARDHAT_LOCAL_CONFIG],
+        });
+      } catch (addError) {
+        // If already pending, ignore and continue
+        if (addError.code === -32002) {
+          console.log('Network add request already pending, please check MetaMask');
+          return;
+        }
+        console.error('Error adding Hardhat local network:', addError);
+        throw addError;
+      }
+    } else if (switchError.code === -32002) {
+      // Already pending
+      console.log('Network switch request already pending, please check MetaMask');
+      return;
+    } else {
+      console.error('Error switching to Hardhat local:', switchError);
       throw switchError;
     }
   }
