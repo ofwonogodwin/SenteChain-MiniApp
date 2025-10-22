@@ -206,7 +206,7 @@ export default function Dashboard() {
               onClick={() => setActiveModal('transactions')}
               className="card text-center hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200"
             >
-              <div className="text-4xl mb-3">📜</div>
+              <div className="text-4xl mb-3"></div>
               <p className="font-bold text-base text-purple-900">Transactions</p>
               <p className="text-xs text-purple-600 mt-1">View history</p>
             </button>
@@ -222,7 +222,7 @@ export default function Dashboard() {
               onClick={() => setActiveModal('qr')}
               className="card text-center hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200"
             >
-              <div className="text-4xl mb-3">📱</div>
+              <div className="text-4xl mb-3"></div>
               <p className="font-bold text-base text-green-900">QR Code</p>
               <p className="text-xs text-green-600 mt-1">Receive payments</p>
             </button>

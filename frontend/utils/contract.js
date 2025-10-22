@@ -297,11 +297,40 @@ export const getSavingsBalance = async (address) => {
 // Get unlock time
 export const getUnlockTime = async (address) => {
   try {
+    // Validate address
+    if (!address || !ethers.isAddress(address)) {
+      console.warn('Invalid address provided:', address);
+      return 0;
+    }
+
+    // Get fresh contract instance
     const vault = await getVaultContract();
-    const unlockTime = await vault.getUnlockTime(address);
-    return Number(unlockTime);
+
+    try {
+      // Call getUnlockTime method
+      const unlockTime = await vault.getUnlockTime(address);
+      console.log(`Unlock time for ${address}: ${unlockTime.toString()}`);
+      
+      // Convert to number for easier comparison
+      return Number(unlockTime);
+    } catch (contractError) {
+      console.error('Contract call getUnlockTime() failed:', contractError);
+      
+      // Check for specific error types
+      if (contractError.message.includes('call revert exception')) {
+        console.error('Contract call reverted - check if contract is deployed correctly');
+      }
+      
+      return 0;
+    }
   } catch (error) {
     console.error('Error fetching unlock time:', error);
+    
+    // More specific error messages
+    if (error.code === 'NETWORK_ERROR') {
+      console.error('Network error - check if Base Sepolia RPC is accessible');
+    }
+    
     return 0;
   }
 };

@@ -42,8 +42,16 @@ export const connectWallet = async () => {
     currentAccount = accounts[0];
     console.log('Account connected:', currentAccount);
 
-    // Just return the account - don't force network switch
-    // User can manually switch network in MetaMask
+    // Auto-switch to the network where contracts are deployed
+    if (contractsData?.network === 'baseSepolia' || contractsData?.chainId === '84532') {
+      try {
+        await switchToBaseSepolia();
+        console.log('Switched to Base Sepolia network');
+      } catch (error) {
+        console.warn('Could not auto-switch to Base Sepolia:', error.message);
+      }
+    }
+
     return currentAccount;
   } catch (error) {
     console.error('Error connecting wallet:', error);

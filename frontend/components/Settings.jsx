@@ -144,14 +144,12 @@ export default function Settings({ user }) {
             </div>
             <button
               onClick={() => handleToggle('notifications')}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.notifications ? 'bg-primary' : 'bg-gray-300'
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.notifications ? 'bg-primary' : 'bg-gray-300'
+                }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.notifications ? 'translate-x-6' : 'translate-x-1'
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.notifications ? 'translate-x-6' : 'translate-x-1'
+                  }`}
               />
             </button>
           </div>
@@ -163,14 +161,12 @@ export default function Settings({ user }) {
             </div>
             <button
               onClick={() => handleToggle('emailAlerts')}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.emailAlerts ? 'bg-primary' : 'bg-gray-300'
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.emailAlerts ? 'bg-primary' : 'bg-gray-300'
+                }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.emailAlerts ? 'translate-x-6' : 'translate-x-1'
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.emailAlerts ? 'translate-x-6' : 'translate-x-1'
+                  }`}
               />
             </button>
           </div>

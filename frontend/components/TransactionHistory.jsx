@@ -18,7 +18,7 @@ export default function TransactionHistory({ userAddress }) {
     try {
       setLoading(true);
       const provider = new ethers.JsonRpcProvider(contractsData.rpcUrl);
-      
+
       // Get the token contract
       const tokenAbi = ['event Transfer(address indexed from, address indexed to, uint256 value)'];
       const tokenContract = new ethers.Contract(
@@ -130,31 +130,28 @@ export default function TransactionHistory({ userAddress }) {
       <div className="flex space-x-2 mb-4 border-b">
         <button
           onClick={() => setFilter('all')}
-          className={`pb-2 px-4 font-medium transition-colors ${
-            filter === 'all'
+          className={`pb-2 px-4 font-medium transition-colors ${filter === 'all'
               ? 'text-primary border-b-2 border-primary'
               : 'text-gray-500 hover:text-gray-700'
-          }`}
+            }`}
         >
           All
         </button>
         <button
           onClick={() => setFilter('sent')}
-          className={`pb-2 px-4 font-medium transition-colors ${
-            filter === 'sent'
+          className={`pb-2 px-4 font-medium transition-colors ${filter === 'sent'
               ? 'text-primary border-b-2 border-primary'
               : 'text-gray-500 hover:text-gray-700'
-          }`}
+            }`}
         >
           Sent
         </button>
         <button
           onClick={() => setFilter('received')}
-          className={`pb-2 px-4 font-medium transition-colors ${
-            filter === 'received'
+          className={`pb-2 px-4 font-medium transition-colors ${filter === 'received'
               ? 'text-primary border-b-2 border-primary'
               : 'text-gray-500 hover:text-gray-700'
-          }`}
+            }`}
         >
           Received
         </button>
@@ -174,11 +171,10 @@ export default function TransactionHistory({ userAddress }) {
             >
               <div className="flex items-center space-x-3 flex-1">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    tx.type === 'sent'
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'sent'
                       ? 'bg-red-100 text-red-600'
                       : 'bg-green-100 text-green-600'
-                  }`}
+                    }`}
                 >
                   {tx.type === 'sent' ? '↑' : '↓'}
                 </div>
@@ -204,9 +200,8 @@ export default function TransactionHistory({ userAddress }) {
                 </div>
                 <div className="text-right">
                   <p
-                    className={`font-semibold ${
-                      tx.type === 'sent' ? 'text-red-600' : 'text-green-600'
-                    }`}
+                    className={`font-semibold ${tx.type === 'sent' ? 'text-red-600' : 'text-green-600'
+                      }`}
                   >
                     {tx.type === 'sent' ? '-' : '+'}
                     {parseFloat(tx.value).toFixed(2)}
