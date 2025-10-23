@@ -28,9 +28,16 @@ export default function SendForm({ onSuccess }) {
       const tx = await transferTokens(recipient, amount);
 
       toast.dismiss();
+      toast.loading('Waiting for confirmation...');
+
+      // Wait for transaction confirmation
+      const receipt = await tx.wait();
+
+      toast.dismiss();
       toast.success(
         <div>
-          <p>Transfer successful!</p>
+          <p className="font-bold">✅ Transfer successful!</p>
+          <p className="text-xs mt-1">Sent {amount} sUSDT</p>
           <a
             href={getExplorerLink(tx.hash)}
             target="_blank"
@@ -39,20 +46,39 @@ export default function SendForm({ onSuccess }) {
           >
             View TX: {formatTxHash(tx.hash)}
           </a>
-        </div>
+        </div>,
+        { duration: 5000 }
       );
+
+      console.log('Transfer confirmed:', receipt);
 
       // Reset form
       setRecipient('');
       setAmount('');
 
-      // Callback to refresh balances
+      // Trigger multiple balance refreshes
       if (onSuccess) {
-        setTimeout(() => onSuccess(), 2000);
+        onSuccess();
+        setTimeout(() => {
+          console.log('Refreshing balances after 1s...');
+          onSuccess();
+        }, 1000);
+        setTimeout(() => {
+          console.log('Final balance refresh after 3s...');
+          onSuccess();
+        }, 3000);
       }
     } catch (error) {
       toast.dismiss();
-      toast.error('Transfer failed: ' + (error.message || 'Unknown error'));
+
+      if (error.code === 4001) {
+        toast.error('Transaction rejected');
+      } else if (error.message?.includes('insufficient')) {
+        toast.error('Insufficient balance');
+      } else {
+        toast.error('Transfer failed: ' + (error.reason || error.message || 'Unknown error'));
+      }
+
       console.error('Transfer error:', error);
     } finally {
       setLoading(false);

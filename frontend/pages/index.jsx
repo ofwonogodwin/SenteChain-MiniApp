@@ -52,13 +52,19 @@ export default function Home() {
     } catch (error) {
       toast.dismiss();
       console.error('Login error:', error);
-      const errorMessage = error.response?.data?.error || 'Invalid email or password';
-      
-      // If account doesn't exist, suggest registration
-      if (errorMessage.includes('Invalid email') || error.response?.status === 400) {
-        toast.error('Account not found. Please create an account first.');
+
+      if (!error.response) {
+        toast.error('Cannot connect to server. Please check if the backend is running.');
+        console.log('Backend URL:', BACKEND_URL);
+        return;
+      }
+
+      const errorMessage = error.response.data?.error;
+
+      if (error.response.status === 400) {
+        toast.error(errorMessage || 'Invalid email or password');
       } else {
-        toast.error(errorMessage);
+        toast.error('Server error. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -131,8 +137,8 @@ export default function Home() {
               <button
                 onClick={() => setMode('login')}
                 className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${mode === 'login'
-                    ? 'bg-white text-primary shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
                   }`}
               >
                 Login
@@ -140,8 +146,8 @@ export default function Home() {
               <button
                 onClick={() => setMode('register')}
                 className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${mode === 'register'
-                    ? 'bg-white text-primary shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
                   }`}
               >
                 Create Account

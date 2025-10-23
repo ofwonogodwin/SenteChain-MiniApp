@@ -3,18 +3,7 @@ import contractsData from '../config/contracts.json';
 import SenteTokenABI from '../config/SenteTokenABI.json';
 import SenteVaultABI from '../config/SenteVaultABI.json';
 
-// Base Sepolia configuration
-export const BASE_SEPOLIA_CONFIG = {
-  chainId: '0x14a34', // 84532 in hex
-  chainName: 'Base Sepolia',
-  nativeCurrency: {
-    name: 'Ethereum',
-    symbol: 'ETH',
-    decimals: 18,
-  },
-  rpcUrls: ['https://sepolia.base.org'],
-  blockExplorerUrls: ['https://sepolia.basescan.org'],
-};
+import { BASE_SEPOLIA_CONFIG, switchToBaseSepolia, isBaseSepolia } from './networkConfig';
 
 let provider = null;
 let signer = null;
@@ -275,9 +264,17 @@ export const getSavingsBalance = async (address) => {
       return '0';
     }
 
-    // Force fresh provider to avoid caching issues
-    provider = null;
-    const vault = await getVaultContract();
+    // Force fresh provider and contract instance to avoid caching
+    if (!provider) {
+      initProvider();
+    }
+
+    // Get fresh contract instance
+    const vault = new ethers.Contract(
+      contractsData.contracts.SenteVault,
+      SenteVaultABI,
+      provider
+    );
 
     try {
       const balance = await vault.getSavingsBalance(address);
@@ -310,27 +307,27 @@ export const getUnlockTime = async (address) => {
       // Call getUnlockTime method
       const unlockTime = await vault.getUnlockTime(address);
       console.log(`Unlock time for ${address}: ${unlockTime.toString()}`);
-      
+
       // Convert to number for easier comparison
       return Number(unlockTime);
     } catch (contractError) {
       console.error('Contract call getUnlockTime() failed:', contractError);
-      
+
       // Check for specific error types
       if (contractError.message.includes('call revert exception')) {
         console.error('Contract call reverted - check if contract is deployed correctly');
       }
-      
+
       return 0;
     }
   } catch (error) {
     console.error('Error fetching unlock time:', error);
-    
+
     // More specific error messages
     if (error.code === 'NETWORK_ERROR') {
       console.error('Network error - check if Base Sepolia RPC is accessible');
     }
-    
+
     return 0;
   }
 };
@@ -465,3 +462,6 @@ export const formatTxHash = (hash) => {
 export const getExplorerLink = (txHash) => {
   return `${BASE_SEPOLIA_CONFIG.blockExplorerUrls[0]}/tx/${txHash}`;
 };
+
+// Re-export network utilities from networkConfig
+export { switchToBaseSepolia, isBaseSepolia } from './networkConfig';

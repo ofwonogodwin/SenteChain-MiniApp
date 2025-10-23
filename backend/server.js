@@ -10,8 +10,10 @@ dotenv.config({ path: '../.env' });
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB (with fallback to in-memory)
-connectDB();
+// Initialize in-memory storage
+connectDB().then(() => {
+  console.log('In-memory storage initialized');
+});
 
 // Middleware
 app.use(cors());

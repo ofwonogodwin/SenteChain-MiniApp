@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { switchToHardhatLocal, switchToBaseSepolia } from '../utils/connectWallet';
+import { switchToHardhatLocal, switchToBaseSepolia, getBaseSepoliaNetworkDetails } from '../utils/connectWallet';
 import contractsData from '../config/contracts.json';
 
 export default function Settings({ user }) {
@@ -10,6 +10,7 @@ export default function Settings({ user }) {
     twoFactor: false,
     darkMode: false
   });
+  const [showNetworkDetails, setShowNetworkDetails] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -38,20 +39,36 @@ export default function Settings({ user }) {
 
   const handleSwitchNetwork = async (network) => {
     try {
-      toast.loading(`Switching to ${network}...`);
+      toast.loading(`Switching to ${network === 'hardhat' ? 'Hardhat Local' : 'Base Sepolia'}...`);
+
       if (network === 'hardhat') {
         await switchToHardhatLocal();
-      } else {
+      } else if (network === 'base-sepolia') {
         await switchToBaseSepolia();
       }
+
       toast.dismiss();
-      toast.success(`Switched to ${network} network`);
+      toast.success(`Switched to ${network === 'hardhat' ? 'Hardhat Local' : 'Base Sepolia'} network`);
       setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
       toast.dismiss();
-      toast.error('Failed to switch network: ' + error.message);
+      console.error('Network switch error:', error);
+
+      // Provide more helpful error messages
+      if (error.code === 4001) {
+        toast.error('Network switch rejected. Please approve in MetaMask.');
+      } else if (error.code === -32002) {
+        toast.error('Network switch request pending. Please check MetaMask.');
+      } else if (error.message?.includes('User rejected')) {
+        toast.error('You rejected the network switch request');
+      } else {
+        toast.error('Auto-switch failed. See manual setup instructions below.');
+        setShowNetworkDetails(true);
+      }
     }
   };
+
+  const networkDetails = getBaseSepoliaNetworkDetails ? getBaseSepoliaNetworkDetails() : null;
 
   const handleExportData = () => {
     const data = {
@@ -117,19 +134,106 @@ export default function Settings({ user }) {
           <div className="flex space-x-2">
             <button
               onClick={() => handleSwitchNetwork('hardhat')}
-              className="flex-1 text-sm bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 transition-colors"
+              className={`flex-1 text-sm px-3 py-2 rounded transition-colors ${currentNetwork === 'Hardhat Local'
+                  ? 'bg-primary text-white cursor-default'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
               disabled={currentNetwork === 'Hardhat Local'}
             >
               Hardhat Local
             </button>
             <button
               onClick={() => handleSwitchNetwork('base-sepolia')}
-              className="flex-1 text-sm bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 transition-colors"
+              className={`flex-1 text-sm px-3 py-2 rounded transition-colors ${currentNetwork === 'Base Sepolia'
+                  ? 'bg-primary text-white cursor-default'
+                  : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
               disabled={currentNetwork === 'Base Sepolia'}
             >
               Base Sepolia
             </button>
           </div>
+
+          {/* Manual Network Setup Instructions */}
+          {showNetworkDetails && networkDetails && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="font-semibold text-blue-900 text-sm">Manual Setup Instructions</h4>
+                <button
+                  onClick={() => setShowNetworkDetails(false)}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-xs text-blue-800 mb-3">
+                To manually add Base Sepolia to MetaMask:
+              </p>
+              <ol className="text-xs text-blue-900 space-y-2 list-decimal list-inside">
+                <li>Open MetaMask extension</li>
+                <li>Click on the network dropdown (top left)</li>
+                <li>Click "Add Network" or "Add a network manually"</li>
+                <li>Enter these details:</li>
+              </ol>
+              <div className="mt-3 bg-white p-3 rounded border border-blue-200 text-xs space-y-2">
+                <div className="flex justify-between">
+                  <span className="font-semibold">Network Name:</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(networkDetails.networkName);
+                      toast.success('Copied!');
+                    }}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {networkDetails.networkName}
+                  </button>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">RPC URL:</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(networkDetails.rpcUrl);
+                      toast.success('Copied!');
+                    }}
+                    className="text-blue-600 hover:underline truncate ml-2"
+                  >
+                    {networkDetails.rpcUrl}
+                  </button>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Chain ID:</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(networkDetails.chainId.toString());
+                      toast.success('Copied!');
+                    }}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {networkDetails.chainId}
+                  </button>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Currency Symbol:</span>
+                  <span>{networkDetails.currencySymbol}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Block Explorer:</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(networkDetails.blockExplorer);
+                      toast.success('Copied!');
+                    }}
+                    className="text-blue-600 hover:underline truncate ml-2"
+                  >
+                    {networkDetails.blockExplorer}
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-blue-700 mt-3 italic">
+                💡 Click any value to copy it to clipboard
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

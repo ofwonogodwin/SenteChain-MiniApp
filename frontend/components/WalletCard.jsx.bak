@@ -10,15 +10,27 @@ import {
 import toast from 'react-hot-toast';
 
 export default function WalletCard({ userAddress, onBalanceUpdate }) {
-  const [balance, setBalance] = useState('5.00'); // Demo balance - 5 sUSDT
+  const [balance, setBalance] = useState('0');
   const [savingsBalance, setSavingsBalance] = useState('0');
   const [unlockTime, setUnlockTime] = useState(0);
-  const [loading, setLoading] = useState(false); // Changed to false for demo
+  const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(true);
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(true);
+
+  // Check for MetaMask installation
+  useEffect(() => {
+    setIsMetaMaskInstalled(!!window.ethereum);
+  }, []);
+
+  // Check for MetaMask installation
+  useEffect(() => {
+    setIsMetaMaskInstalled(!!window.ethereum);
+  }, []);
 
   // Load balances initially and set up auto-refresh
   useEffect(() => {
-    if (userAddress) {
+    if (userAddress && isMetaMaskInstalled) {
       loadBalances();
 
       // Set up automatic refresh every 10 seconds
@@ -56,27 +68,44 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
       // Check if connected to correct network
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
       if (chainId !== '0x14A34') { // Base Sepolia
-        // Don't auto-switch, just log it
-        console.log('Not on Base Sepolia network. Current chain:', chainId);
-        // User can switch manually from settings
-        return;
+        toast.loading('Switching to Base Sepolia network...');
+        try {
+          await switchToBaseSepolia();
+          toast.dismiss();
+          toast.success('Successfully switched to Base Sepolia!');
+          // Wait a moment for the network to fully switch
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Return early - the chainChanged event will trigger a reload
+          return;
+        } catch (switchError) {
+          toast.dismiss();
+          console.error('Network switch error:', switchError);
+
+          // Provide more helpful error messages
+          if (switchError.code === 4001) {
+            toast.error('Please approve the network switch in MetaMask');
+          } else if (switchError.message?.includes('User rejected')) {
+            toast.error('Network switch cancelled. Please switch to Base Sepolia manually.');
+          } else {
+            toast.error('Please switch to Base Sepolia network in MetaMask');
+          }
+
+          // Don't throw error, just return to prevent further execution
+          return;
+        }
       }
 
-      console.log('Fetching balances for:', userAddress);
-
-      // Get all balances in parallel with cache busting
+      // Get all balances in parallel
       const [bal, savBal, unlock] = await Promise.all([
         getUserBalance(userAddress),
         getSavingsBalance(userAddress),
         getUnlockTime(userAddress),
       ]);
 
-      console.log('Fetched balances:', { balance: bal, savings: savBal, unlockTime: unlock });
-
-      // Always update state with fresh values
-      setBalance(bal);
-      setSavingsBalance(savBal);
-      setUnlockTime(unlock);
+      // Update state only if component is still mounted and values have changed
+      setBalance(prevBal => prevBal !== bal ? bal : prevBal);
+      setSavingsBalance(prevSavBal => prevSavBal !== savBal ? savBal : prevSavBal);
+      setUnlockTime(prevUnlock => prevUnlock !== unlock ? unlock : prevUnlock);
 
       if (onBalanceUpdate) {
         onBalanceUpdate(bal, savBal);
@@ -110,39 +139,15 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
       const tx = await claimFaucet();
 
       toast.dismiss();
-      toast.loading('Waiting for confirmation...');
+      toast.success(`Claimed 100 sUSDT! 🎉 TX: ${tx.hash.slice(0, 10)}...`);
 
-      // Wait for confirmation
-      const receipt = await tx.wait();
-
-      toast.dismiss();
-      toast.success(
-        <div>
-          <p className="font-bold">🎉 Claimed 100 sUSDT!</p>
-          <p className="text-xs mt-1">TX: {tx.hash.slice(0, 10)}...</p>
-        </div>,
-        { duration: 5000 }
-      );
-
-      console.log('Faucet claim confirmed:', receipt);
-
-      // Trigger multiple balance refreshes
-      loadBalances();
-      setTimeout(() => {
-        console.log('Refreshing balances after 1s...');
-        loadBalances();
-      }, 1000);
-      setTimeout(() => {
-        console.log('Final balance refresh after 3s...');
-        loadBalances();
-      }, 3000);
+      // Reload balances
+      setTimeout(() => loadBalances(), 2000);
     } catch (error) {
       toast.dismiss();
       const errorMsg = error.message || error.reason || 'Unknown error';
       if (errorMsg.includes('24 hours')) {
         toast.error('Please wait 24 hours between claims');
-      } else if (error.code === 4001) {
-        toast.error('Transaction rejected');
       } else {
         toast.error('Failed to claim tokens: ' + errorMsg);
       }
@@ -161,16 +166,31 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
 
   return (
     <div className="card">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800">My Wallet</h2>
-        <button
-          onClick={loadBalances}
-          disabled={loading}
-          className="text-primary hover:text-primary-dark"
-        >
-          {loading ? 'Loading...' : 'Refresh'}
-        </button>
-      </div>
+      {!isMetaMaskInstalled ? (
+        <div className="text-center py-6">
+          <h3 className="text-xl font-bold text-gray-800 mb-4">MetaMask Required</h3>
+          <p className="text-gray-600 mb-4">To use this application, you need to install MetaMask.</p>
+          <a
+            href="https://metamask.io/download/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary inline-block"
+          >
+            Install MetaMask
+          </a>
+        </div>
+      ) : (
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800">My Wallet</h2>
+            <button
+              onClick={loadBalances}
+              disabled={loading}
+              className="text-primary hover:text-primary-dark"
+            >
+              {loading ? 'Loading...' : 'Refresh'}
+            </button>
+          </div>
 
       {/* Available Balance */}
       <div className="bg-gradient-to-r from-primary to-primary-dark rounded-lg p-6 mb-4 text-white">
@@ -210,6 +230,9 @@ export default function WalletCard({ userAddress, onBalanceUpdate }) {
       >
         {claiming ? 'Claiming...' : 'Claim 100 sUSDT (Testnet Faucet)'}
       </button>
+    </div>
+        </>
+      )}
     </div>
   );
 }

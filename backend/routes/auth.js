@@ -3,11 +3,10 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
-const User = require('../models/User');
 const { ethers } = require('ethers');
 
-// In-memory storage fallback (if MongoDB is not available)
-const inMemoryUsers = new Map();
+// In-memory storage
+const users = new Map();
 
 // Generate a deterministic wallet address from email
 const generateWalletAddress = (email) => {
@@ -47,21 +46,9 @@ router.post(
 
       console.log('Registration attempt for email:', email);
 
-      let existingUser;
-      try {
-        existingUser = await User.findOne({ email });
-        console.log('Existing user check (MongoDB):', existingUser ? 'Found' : 'Not found');
-      } catch (dbError) {
-        console.log('MongoDB error, checking in-memory storage');
-        // Check in-memory storage
-        for (const [, userData] of inMemoryUsers) {
-          if (userData.email === email) {
-            existingUser = userData;
-            break;
-          }
-        }
-        console.log('Existing user check (in-memory):', existingUser ? 'Found' : 'Not found');
-      }
+      // Check if user already exists in in-memory storage
+      const existingUser = Array.from(users.values()).find(user => user.email === email);
+      console.log('Existing user check:', existingUser ? 'Found' : 'Not found');
 
       if (existingUser) {
         console.log('Registration failed: Email already exists');
@@ -75,39 +62,30 @@ router.post(
       const hashedPassword = await bcrypt.hash(password, 10);
 
       console.log('Creating new user...');
-      let user;
-      try {
-        // Create user in MongoDB
-        user = new User({
-          username: name,
-          email,
-          phone,
-          password: hashedPassword,
-          walletAddress
-        });
-        await user.save();
-        console.log('User saved to MongoDB successfully');
-      } catch (dbError) {
-        // Fallback to in-memory storage
-        console.log('MongoDB save failed, using in-memory storage');
-        user = {
-          _id: Date.now().toString(),
-          username: name,
-          email,
-          phone,
-          password: hashedPassword,
-          walletAddress,
-          createdAt: new Date(),
-          lastLogin: new Date(),
-        };
-        inMemoryUsers.set(email, user);
-        console.log('User saved to in-memory storage. Total users:', inMemoryUsers.size);
-      }
+      // Create user in in-memory storage
+      const user = {
+        _id: Date.now().toString(),
+        username: name,
+        email,
+        phone,
+        password: hashedPassword,
+        walletAddress,
+        createdAt: new Date(),
+        lastLogin: new Date(),
+      };
+      users.set(email, user);
+      console.log('User saved successfully. Total users:', users.size);
 
       // Generate JWT token
       const token = generateToken(user._id, walletAddress);
 
-      res.json({
+      // Log successful registration
+      console.log('Registration successful:', {
+        email: user.email,
+        walletAddress: user.walletAddress
+      });
+
+      res.status(200).json({
         success: true,
         token,
         user: {
@@ -143,22 +121,16 @@ router.post(
 
       console.log('Login attempt for email:', email);
 
-      let user;
-      try {
-        user = await User.findOne({ email });
-        console.log('MongoDB search result:', user ? 'User found' : 'User not found');
-      } catch (dbError) {
-        console.log('MongoDB error, checking in-memory storage');
-        // Check in-memory storage
-        for (const [, userData] of inMemoryUsers) {
-          if (userData.email === email) {
-            user = userData;
-            break;
-          }
+      // Find user in in-memory storage
+      let user = null;
+      for (const [, userData] of users) {
+        if (userData.email === email) {
+          user = userData;
+          break;
         }
-        console.log('In-memory search result:', user ? 'User found' : 'User not found');
-        console.log('In-memory users count:', inMemoryUsers.size);
       }
+      console.log('Login attempt:', { email, found: !!user });
+      console.log('Total users in storage:', users.size);
 
       if (!user) {
         console.log('Login failed: User not found');
@@ -169,7 +141,7 @@ router.post(
       // Verify password
       const isPasswordValid = await bcrypt.compare(password, user.password);
       console.log('Password valid:', isPasswordValid);
-      
+
       if (!isPasswordValid) {
         console.log('Login failed: Invalid password');
         return res.status(400).json({ error: 'Invalid email or password' });

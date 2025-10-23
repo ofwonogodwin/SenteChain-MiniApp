@@ -54,22 +54,29 @@ export default function Dashboard() {
 
   const handleConnectWallet = async () => {
     try {
-      if (!isMetaMaskInstalled()) {
-        toast.error('Please install MetaMask to use this feature');
-        window.open('https://metamask.io/download/', '_blank');
-        return;
-      }
+      console.log('Attempting to connect wallet...');
+      toast.loading('Opening MetaMask...');
 
-      toast.loading('Connecting to MetaMask...');
       const account = await connectWallet();
+      console.log('Wallet connected successfully:', account);
 
       toast.dismiss();
-      toast.success('Wallet connected! ');
+      toast.success(`Wallet connected! ${account.slice(0, 6)}...${account.slice(-4)}`);
       setWalletConnected(true);
     } catch (error) {
       toast.dismiss();
       console.error('Wallet connection error:', error);
-      toast.error('Failed to connect wallet: ' + error.message);
+
+      // Provide specific error messages
+      if (error.code === 4001) {
+        toast.error('Connection request rejected. Please approve in MetaMask.');
+      } else if (error.message?.includes('User rejected')) {
+        toast.error('You rejected the connection request');
+      } else if (error.message?.includes('not installed')) {
+        toast.error('MetaMask not found. Please make sure it is installed and enabled.');
+      } else {
+        toast.error(error.message || 'Failed to connect wallet');
+      }
     }
   };
 

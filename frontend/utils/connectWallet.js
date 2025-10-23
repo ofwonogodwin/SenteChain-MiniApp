@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { BASE_SEPOLIA_CONFIG } from './contract';
+import { BASE_SEPOLIA_CONFIG, switchToBaseSepolia as switchNetwork } from './networkConfig';
 import contractsData from '../config/contracts.json';
 
 let provider = null;
@@ -26,14 +26,21 @@ export const HARDHAT_LOCAL_CONFIG = {
 // Request account access
 export const connectWallet = async () => {
   try {
+    console.log('connectWallet called');
+
     if (!isMetaMaskInstalled()) {
+      console.error('MetaMask not detected');
       throw new Error('MetaMask is not installed. Please install it to use this app.');
     }
+
+    console.log('MetaMask detected, requesting accounts...');
 
     // Request account access first
     const accounts = await window.ethereum.request({
       method: 'eth_requestAccounts',
     });
+
+    console.log('Accounts received:', accounts);
 
     if (!accounts || accounts.length === 0) {
       throw new Error('No accounts found');
@@ -45,10 +52,12 @@ export const connectWallet = async () => {
     // Auto-switch to the network where contracts are deployed
     if (contractsData?.network === 'baseSepolia' || contractsData?.chainId === '84532') {
       try {
-        await switchToBaseSepolia();
+        console.log('Attempting to switch to Base Sepolia...');
+        await switchNetwork();
         console.log('Switched to Base Sepolia network');
       } catch (error) {
         console.warn('Could not auto-switch to Base Sepolia:', error.message);
+        // Don't throw error, just log warning
       }
     }
 
@@ -82,40 +91,8 @@ export const getCurrentAccount = async () => {
   }
 };
 
-// Switch to Base Sepolia network
-export const switchToBaseSepolia = async () => {
-  try {
-    await window.ethereum.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: BASE_SEPOLIA_CONFIG.chainId }],
-    });
-  } catch (switchError) {
-    // This error code indicates that the chain has not been added to MetaMask
-    if (switchError.code === 4902) {
-      try {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [BASE_SEPOLIA_CONFIG],
-        });
-      } catch (addError) {
-        // If already pending, ignore and continue
-        if (addError.code === -32002) {
-          console.log('Network add request already pending, please check MetaMask');
-          return;
-        }
-        console.error('Error adding Base Sepolia network:', addError);
-        throw addError;
-      }
-    } else if (switchError.code === -32002) {
-      // Already pending
-      console.log('Network switch request already pending, please check MetaMask');
-      return;
-    } else {
-      console.error('Error switching to Base Sepolia:', switchError);
-      throw switchError;
-    }
-  }
-};
+// Re-export network switching function
+export { switchToBaseSepolia, getBaseSepoliaNetworkDetails } from './networkConfig';
 
 // Switch to Hardhat Local network
 export const switchToHardhatLocal = async () => {
